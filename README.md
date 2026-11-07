@@ -1,26 +1,134 @@
-# network-intrusion-detection-ml
-Network Intrusion Detection & Zero-Day Threat Classification System
-Group Members:
-1. Rodgers Kipkirui: SKIRRO2411
-2. Joan Cherono: SCHEKI2412
-3. Amos Kiprotich: SAMOKI2411
+# Network Intrusion Detection & Zero-Day Threat Classification System
 
-1. Background of the Problem & Problem Statement
-In modern enterprise IT infrastructure and campus network environments, cyber threats are escalating in complexity, volume, and stealth. Traditional network security mechanisms—such as static firewalls and signature-based Intrusion Detection Systems (IDS)—rely on pre-defined rule databases to flag suspicious activities. While signature-based detection effectively stops known malware signatures, it is incapable of detecting zero-day exploits, novel denial-of-service (DoS/DDoS) variations, or sophisticated lateral movement attacks. Cybercriminals exploit these blind spots to infiltrate organizational networks, extract sensitive user data, and disrupt critical digital services before signatures can even be authored and distributed.
-A Data Mining model offers the most viable and proactive solution to overcome the limitations of static signature detection. By analyzing high-volume network packet headers, flow durations, payload sizes, and connection state statistics, a Supervised Machine Learning model can learn behavioral patterns that differentiate legitimate network traffic from malicious intrusions. Rather than scanning for exact string signatures, the predictive model classifies incoming IP traffic packets in real time based on statistical features. This data-driven approach empowers network administrators and Security Operations Centers (SOC) to detect zero-day anomalies, automate firewall rule enforcement, and minimize mean time to detect (MTTD) cyber intrusions.
-2. Project Methodology
-The primary objective of this project is to build an intelligent network intrusion detection pipeline capable of classifying live network flow records into benign traffic or specific threat categories (such as DoS/DDoS, Port Scanning, Botnet, and Brute Force attacks) with high precision and low latency. The model belongs to the category of Supervised Machine Learning Multi-Class Classification. Supervised classification was selected because publicly benchmarked network security datasets provide fully labeled traffic flows, enabling algorithms to learn high-dimensional decision boundaries between safe user interactions and distinct attack vector patterns.
-The dataset utilizes approximately 25,000 traffic flow records derived from benchmark intrusion detection datasets (such as CIC-IDS2017). Key features capture network-layer and transport-layer characteristics, including flow duration, total forward/backward packets, packet length variance, inter-arrival time (IAT), TCP flag counts (SYN, ACK, FIN), and flow byte rates. Data preprocessing and cleaning using Python's pandas and scikit-learn libraries involved:
-•	Removing Duplicates & Noise: Filtering out duplicate flow entries and corrupt packets caused by session timeouts.
-•	Missing & Infinite Value Imputation: Handling missing values or infinite values (e.g., division-by-zero errors in flow byte rates) via median imputation.
-•	Categorical Encoding: Encoding categorical attributes such as transport protocols (TCP, UDP, ICMP) using one-hot encoding.
-•	Feature Scaling: Scaling continuous numerical features using MinMaxScaler to standardize feature contributions across varying scales.
-For model training, we implemented and evaluated Random Forest Classifier, Gradient Boosting (XGBoost), and a baseline Decision Tree Classifier. Tree-based ensemble methods excel at processing high-dimensional tabular network logs without being skewed by non-linear distributions or feature dependencies. Model validation followed a stratified 10-fold cross-validation protocol to evaluate performance across balanced dataset splits, prioritizing high precision to prevent false alarms while maintaining high recall for zero-day attack classes.
-3. Results & Discussions
-The comparative evaluation of the candidate machine learning models demonstrated exceptional predictive performance across all primary evaluation metrics on the test dataset split. Among the evaluated algorithms, the XGBoost Classifier achieved the highest overall accuracy of 98.4%, outperforming Random Forest (97.6%) and the baseline Decision Tree Classifier (95.1%). The model achieved an overall Precision of 98.2%, Recall of 97.9%, and an F1-Score of 98.0% across multi-class threat categories, with an ROC-AUC score of 0.992. Specifically, high-risk attack vectors such as Denial of Service (DoS/DDoS) and Port Scanning recorded Recall rates exceeding 99.1%, confirming the model's capability to identify critical security breaches with minimal delay.
-Furthermore, the False Positive Rate (FPR) was restricted to 0.6%, effectively addressing the key requirement of preventing legitimate network traffic from being incorrectly flagged or blocked. The feature importance analysis revealed that packet length variance, flow inter-arrival time (IAT), and TCP flag ratios were the most dominant predictors in separating normal traffic from malicious behavior. These results confirm that the machine learning model successfully met its primary objective by providing a reliable, high-precision intrusion classification pipeline capable of augmenting traditional signature-based security controls.
-4. Summary & Conclusion
-This project successfully designed, implemented, and validated a Supervised Machine Learning Network Intrusion Detection System capable of identifying known cyber threats and zero-day anomalies within complex network traffic flows. By leveraging tree-based ensemble algorithms like XGBoost on aggregated flow telemetry, the system achieved a 98.4% classification accuracy with a minimal false positive rate of 0.6%, demonstrating the power of data mining in modern cybersecurity management. For future recommendations, the model's functionality can be enhanced by integrating Deep Learning architectures—such as Long Short-Term Memory (LSTM) networks or Transformers—to capture sequential temporal dependencies across extended session windows. Additionally, deploying the trained model onto Lightweight Edge Network Devices (such as Raspberry Pi or Smart NICs) and establishing an automated continuous retraining loop using streaming network logs will ensure real-time threat response and resilience against novel attack vectors.
-5. GitHub Repository Link
-The complete source code, dataset preprocessing scripts, trained ML models, and project documentation for this system are available at:
-https://github.com/kipAmos/network-intrusion-detection-ml
+**Group Members**
+1. Rodgers Kipkirui — SKIRRO2411
+2. Joan Cherono — SCHEKI2412
+3. Amos Kiprotich — SAMOKI2411
+
+## 1. Project overview
+
+This project applies supervised machine learning to labelled network-flow
+records. It compares Decision Tree, Random Forest and XGBoost classifiers to
+identify benign traffic and attack categories represented in the training data.
+
+> Important research limitation: a supervised classifier trained on labelled
+> attack categories does not automatically prove detection of genuinely unseen
+> zero-day attacks. That claim requires a separate evaluation in which one or
+> more attack families are withheld from training and used only for testing.
+> Until that experiment is completed, describe the system as an intrusion
+> detection classifier with potential to support anomaly/novel-threat detection.
+
+## 2. Requirements
+
+- Python 3.10 or newer
+- A labelled network-flow CSV dataset
+- Internet access for the first-time installation of Python packages
+
+## 3. Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/kipAmos/network-intrusion-detection-ml.git
+cd network-intrusion-detection-ml
+
+# Create and activate a virtual environment (Windows)
+py -m venv .venv
+.venv\Scripts\activate
+
+# On Linux/macOS, use:
+# python3 -m venv .venv
+# source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+## 4. Add the dataset
+
+Place the CSV file at:
+
+`data/network_traffic.csv`
+
+The target column is detected automatically when named `Label`, `Class`,
+`Attack`, or `Target`. For a differently named target column, supply `--target`.
+
+The dataset should contain labelled flow records, for example benign traffic
+and attack categories. This repository does not include CIC-IDS2017 or another
+third-party dataset; obtain it from its official source and respect its licence.
+
+## 5. Train and evaluate
+
+```bash
+python train.py
+```
+
+To specify a different dataset or target column:
+
+```bash
+python train.py --data data/your_dataset.csv --target Label
+```
+
+The default evaluation uses an 80/20 stratified train/test split and up to
+10-fold stratified cross-validation on the training portion. The best model is
+selected using mean cross-validation weighted F1-score, then evaluated once on
+the held-out test set.
+
+Generated files:
+
+- `models/best_intrusion_model.joblib` — fitted preprocessing and classifier
+- `reports/metrics.json` — test metrics and class-level report
+- `reports/model_comparison.csv` — cross-validation comparison
+- `reports/confusion_matrix.csv` — confusion matrix
+
+Metrics include accuracy, weighted precision, weighted recall, weighted F1,
+micro false-positive rate and weighted one-vs-rest ROC-AUC when it can be
+calculated.
+
+## 6. Classify new traffic records
+
+Prepare a CSV containing the same feature columns used for training, without
+the target column, then run:
+
+```bash
+python predict.py --input data/new_network_flows.csv
+```
+
+Predictions are written to `reports/predictions.csv`. Missing training features
+are filled as missing values and handled by the saved preprocessing pipeline.
+For meaningful results, the input feature definitions and units must match the
+training dataset.
+
+## 7. Methodology
+
+1. Load and clean the labelled flow records.
+2. Remove duplicate records, invalid target rows and identifier-like columns.
+3. Impute missing values, scale numerical fields and one-hot encode categorical
+   fields inside a scikit-learn pipeline.
+4. Compare Decision Tree, Random Forest and XGBoost using stratified
+   cross-validation.
+5. Select the model with the best mean cross-validation weighted F1-score.
+6. Evaluate the selected model on a separate stratified test set.
+7. Save the model and evaluation reports for reproducibility.
+
+## 8. Interpreting results
+
+Use the values actually generated in `reports/metrics.json` in the submitted
+report. Do not copy example or expected scores. Report the dataset, number of
+records after cleaning, class distribution, split, cross-validation method and
+per-class precision/recall/F1 alongside overall metrics.
+
+A low false-positive rate is important because incorrectly flagging benign
+traffic can create unnecessary alerts. Recall is important because missed
+attacks can remain undetected. Weighted metrics account for class frequency;
+also inspect per-class scores and the confusion matrix, especially when the
+dataset is imbalanced.
+
+## 9. Limitations and future work
+
+- Benchmark data may not represent all live network environments.
+- Results depend on dataset quality, feature definitions and class balance.
+- A high score on known classes is not proof of zero-day detection.
+- Future work should test unseen attack families, evaluate on temporally
+  separated traffic, monitor inference latency, and investigate drift-aware
+  retraining and carefully controlled deployment.
+
+
